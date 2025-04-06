@@ -9,7 +9,7 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
   // You can send this data to a server or service here
   console.log({ name, email, subject, message });
 
-  // alert("I'll Reach you Soon - JSB");
+  alert("I'll Reach you Soon - JSB");
 
   this.reset();
 });

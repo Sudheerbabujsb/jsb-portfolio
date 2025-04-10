@@ -1,15 +1,30 @@
-document.getElementById("contactForm").addEventListener("submit", function (e) {
-  e.preventDefault();
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("contactForm");
 
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const subject = document.getElementById("subject").value.trim();
-  const message = document.getElementById("comment").value.trim();
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-  // You can send this data to a server or service here
-  console.log({ name, email, subject, message });
+    const formData = new FormData(form);
 
-  alert("I'll Reach you Soon - JSB");
+    try {
+      const response = await fetch("https://formspree.io/f/movepjng", {
+        method: "POST",
+        body: formData,
+      });
 
-  this.reset();
+      console.log("Response status:", response.status);
+
+      if (response.ok) {
+        console.log("✅ Form submitted successfully. Redirecting...");
+        window.location.href = "thank-you.html";
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Form submission failed:", errorText);
+        alert("Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error("⚠️ Fetch error:", error);
+      alert("Error submitting form. Check console for more details.");
+    }
+  });
 });

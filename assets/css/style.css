@@ -25,6 +25,7 @@ font-family: 'Poppins', sans-serif;
 /*-------------------------------------
 		1.General css (Reset code)
 --------------------------------------*/
+
 *{
     padding: 0;
     margin: 0;
@@ -205,6 +206,32 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
     height:100%;
 }
 
+/* From Uiverse.io by mrhyddenn */ 
+.header-text a {
+    padding: 10px 20px;
+    border: none;
+    font-size: 17px;
+    color: #fff;
+    border-radius: 7px;
+    letter-spacing: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    transition: 0.5s;
+    transition-property: box-shadow;
+  }
+  
+  .header-text a {
+    background: rgb(0,140,255);
+    box-shadow: 0 0 25px rgb(0,140,255);
+  }
+  
+  .header-text a:hover {
+    box-shadow: 0 0 5px #d92cf9,
+                0 0 25px #d92cf9,
+                0 0 50px #d92cf9,
+                0 0 100px #d92cf9;
+  }
+
 /*.header-text-area*/
 .header-text h2 {
     color: #fff;
@@ -217,12 +244,12 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
 .header-text p {
     color: #fff;
     font-size: 20px;
-    font-weight: 300;
+    font-weight: 400;
     text-transform: uppercase;
     margin: 30px 0 60px;
     letter-spacing: 1px;
 }
-.header-text a {
+/* .header-text a {
     width: 200px;
     height: 60px;
     line-height: 60px;
@@ -238,7 +265,7 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
     -o-transition: 0.3s linear; 
     transition: 0.3s linear;
 }
-.header-text a:hover{ box-shadow: 0 5px 20px rgba(0,0,0,.4);background:#9f00ff;border: 1px solid #9f00ff;}
+.header-text a:hover{ box-shadow: 0 5px 20px rgba(0,0,0,.4);background:#9f00ff;border: 1px solid #9f00ff;} */
 /*.header-text-area*/
 
 /*-------------------------------------

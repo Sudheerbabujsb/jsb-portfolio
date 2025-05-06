@@ -112,7 +112,7 @@ nav.navbar.bootsnav.no-background {
 }
 
 nav.navbar.bootsnav {
-    background-color: #ff0000;
+    background-color: #ffffff;
     border-bottom: transparent;
     box-shadow: 0 3px 15px rgba(0,0,0,.2);
 }
@@ -156,7 +156,7 @@ nav.navbar.bootsnav ul.nav > li.dropdown span {
 
 
 /*.menu-ui-design*/
-.menu-ui-design{overflow-y:scroll;height: 350px;}
+.menu-ui-design{overflow-y:scroll;height: 300px;}
 .menu-ui-design::-webkit-scrollbar {
     width:5px;
 }

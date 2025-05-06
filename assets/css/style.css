@@ -112,7 +112,7 @@ nav.navbar.bootsnav.no-background {
 }
 
 nav.navbar.bootsnav {
-    background-color: #fff;
+    background-color: #ff0000;
     border-bottom: transparent;
     box-shadow: 0 3px 15px rgba(0,0,0,.2);
 }
@@ -123,7 +123,7 @@ nav.navbar.bootsnav {
     color: #d92cf9;
     font-size: 20px;
     font-weight: 600;
-    padding: 33px 0px 48px;
+    padding: 33px 0px 57px;
     text-transform: uppercase;
 }
 /*.navbar-brand*/

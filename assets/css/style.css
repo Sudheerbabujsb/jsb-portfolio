@@ -243,6 +243,7 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
 }
 .header-text h2 span {color: #d92cf9;}
 .header-text p {
+    /* -webkit-text-stroke: 1px #d92cf9; */
     color: #fff;
     font-size: 20px;
     font-weight: 400;

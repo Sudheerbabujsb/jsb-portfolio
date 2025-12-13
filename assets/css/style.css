@@ -207,7 +207,7 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
 }
 
 /* From Uiverse.io by mrhyddenn */ 
-.header-text a {
+/* .header-text a {
     padding: 10px 20px;
     border: none;
     font-size: 17px;
@@ -218,9 +218,9 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
     text-transform: uppercase;
     transition: 0.5s;
     transition-property: box-shadow;
-  }
+  } */
   
-  .header-text a {
+  /* .header-text a {
     background: rgb(0,140,255);
     box-shadow: 0 0 25px rgb(0,140,255);
   }
@@ -230,7 +230,94 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
                 0 0 25px #d92cf9,
                 0 0 50px #d92cf9,
                 0 0 100px #d92cf9;
-  }
+  } */
+
+  .header-text .btn-resume {
+    display: inline-block;
+    padding: 12px 26px;
+    font-size: 17px;
+    color: #fff;
+    border-radius: 8px;
+    letter-spacing: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgb(0, 140, 255);
+    box-shadow: 0 0 25px rgb(0, 140, 255);
+    transition: box-shadow 0.5s ease;
+    text-decoration: none;
+}
+
+.header-text .btn-resume:hover {
+    box-shadow: 
+        0 0 5px #d92cf9,
+        0 0 25px #d92cf9,
+        0 0 50px #d92cf9,
+        0 0 100px #d92cf9;
+}
+
+.header-text .btn-gallery {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 22px;           /* smaller */
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #0f5132;
+    background: linear-gradient(135deg, #b7f7d1, #7ae7c7);
+    border-radius: 50px;         /* pill shape */
+    text-transform: uppercase;
+    text-decoration: none;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.header-text .btn-gallery:hover {
+    transform: translateY(-3px);
+    background: linear-gradient(135deg, #7ae7c7, #34d399);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+}
+
+.btn-whatsapp-icon {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #25D366;
+    border-radius: 50%;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.45);
+    transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.btn-whatsapp-icon i {
+    font-size: 26px;
+    color: #fff;
+    line-height: 2;          /* IMPORTANT: prevents jump */
+    transition: none;
+}
+
+.btn-whatsapp-icon:hover {
+    background: #1ebe5d;
+    box-shadow: 
+        0 10px 25px rgba(37, 211, 102, 0.6),
+        0 0 0 4px rgba(37, 211, 102, 0.15); /* soft ring effect */
+}
+
+
+
+
+.hero-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;          /* space between buttons */
+    margin-top: 40px;
+    flex-wrap: wrap;    /* responsive */
+}
+
+
 
 /*.header-text-area*/
 .header-text h2 {

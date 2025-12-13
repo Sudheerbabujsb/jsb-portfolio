@@ -278,7 +278,7 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
 }
 
-.btn-whatsapp-icon {
+/* .btn-whatsapp-icon {
     width: 52px;
     height: 52px;
     display: inline-flex;
@@ -294,7 +294,7 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
 .btn-whatsapp-icon i {
     font-size: 26px;
     color: #fff;
-    line-height: 2;          /* IMPORTANT: prevents jump */
+    line-height: 2;          /* IMPORTANT: prevents jump 
     transition: none;
 }
 
@@ -302,8 +302,60 @@ nav.navbar.bootsnav .navbar-toggle i{color: #d92cf9;}
     background: #1ebe5d;
     box-shadow: 
         0 10px 25px rgba(37, 211, 102, 0.6),
-        0 0 0 4px rgba(37, 211, 102, 0.15); /* soft ring effect */
+        0 0 0 4px rgba(37, 211, 102, 0.15); /* soft ring effect 
+} */
+
+/* Floating WhatsApp Button */
+.whatsapp-float {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+
+    width: 56px;
+    height: 56px;
+
+    background-color: #25D366;
+    border-radius: 50%;
+
+    text-decoration: none;
+    z-index: 9999;
+
+    box-shadow: 0 10px 24px rgba(37, 211, 102, 0.45);
+
+    /* IMPORTANT */
+    display: block;
 }
+
+/* ICON — FORCE CENTER */
+.whatsapp-float i {
+    position: absolute;      /* KEY FIX */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    font-size: 28px;
+    color: #ffffff;
+
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+
+    transition: none !important;
+}
+
+/* Hover — NO POSITION CHANGE */
+.whatsapp-float:hover {
+    background-color: #1ebe5d;
+    box-shadow:
+        0 14px 30px rgba(37, 211, 102, 0.6),
+        0 0 0 6px rgba(37, 211, 102, 0.15);
+}
+
+/* Prevent browser focus issues */
+.whatsapp-float:focus {
+    outline: none;
+}
+
 
 
 

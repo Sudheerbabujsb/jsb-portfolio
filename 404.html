@@ -30,9 +30,28 @@
 </head>
 <body>
   <div>
+
     <h1>404 - ERROR</h1>
-    <p><h2>Sudheer Babu Jangam</h2><br>Sorry, the page you’re looking for doesn’t exist.</p>
+    <p><br>Sorry, the page you’re looking for doesn’t exist.</p>
+
     <a href="/">Go Home</a>
+
+    <p><br>Redirecting to home in <strong><span id="count">10</span></strong> seconds… JSB</p>
+    
   </div>
+  <script>
+  let seconds = 10;
+
+  const timer = setInterval(() => {
+    seconds--;
+    document.getElementById("count").innerText = seconds;
+
+    if (seconds === 0) {
+      clearInterval(timer);
+      window.location.href = "/";
+    }
+  }, 1000);
+</script>
+
 </body>
 </html>

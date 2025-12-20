@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protected Files</title>
+
+<!-- Font Awesome (eye icon) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    padding: 20px;
+}
+
+/* ---------- LOGIN ---------- */
+.login-box {
+    max-width: 360px;
+    margin: 120px auto;
+    background: #fff;
+    padding: 30px 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    text-align: center;
+}
+
+.login-box h2 {
+    margin-bottom: 15px;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.login-box input {
+    width: 100%;
+    max-width: 260px;
+    padding: 10px 40px 10px 10px;
+    margin: 10px auto 0;
+    display: block;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+
+.eye-icon {
+    position: absolute;
+    right: calc(50% - 130px + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #555;
+}
+
+.login-box button {
+    width: 100%;
+    max-width: 260px;
+    padding: 10px;
+    margin: 15px auto 0;
+    display: block;
+    border: none;
+    background: #008cff;
+    color: white;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.login-box button:hover {
+    background: #006fd6;
+}
+
+/* ---------- FILE MANAGER ---------- */
+.hidden {
+    display: none;
+}
+
+.file-manager {
+    max-width: 800px;
+    margin: auto;
+}
+
+.folder {
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.folder-header {
+    padding: 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.folder-content {
+    display: none;
+    padding: 10px 20px;
+}
+
+.file {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.file:last-child {
+    border-bottom: none;
+}
+
+.download {
+    background: #008cff;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN -->
+<div class="login-box" id="loginBox">
+    <h2>🔒 Protected Files</h2>
+
+    <form onsubmit="checkPassword(); return false;">
+        <div class="input-wrapper">
+            <input
+                type="password"
+                id="password"
+                placeholder="Enter password"
+                autofocus
+                onkeydown="checkCapsLock(event)"
+                onpaste="return false"
+                oncopy="return false"
+                oncut="return false"
+            >
+            <i id="eyeIcon" class="fa-solid fa-eye eye-icon" onclick="togglePassword()"></i>
+        </div>
+
+        <small id="capsWarning" style="color:red; display:none;">
+            ⚠ Caps Lock is ON
+        </small>
+
+        <button type="submit">Unlock</button>
+    </form>
+
+    <p id="error" style="color:red; display:none;">Wrong password!</p>
+</div>
+
+<!-- 📂 FILE MANAGER -->
+<div class="file-manager hidden" id="files">
+    <h2 style="text-align:center;">📂 My Files</h2>
+
+    <div class="folder">
+        <div class="folder-header" onclick="toggleFolder(this)">📁 Documents</div>
+        <div class="folder-content">
+            <div class="file">
+                <span>📄 Resume.pdf</span>
+                <a class="download" href="files/documents/resume.pdf" download>Download</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="folder">
+        <div class="folder-header" onclick="toggleFolder(this)">📁 Images</div>
+        <div class="folder-content">
+            <div class="file">
+                <span>🖼️ photo1.jpg</span>
+                <a class="download" href="files/images/photo1.jpg" download>Download</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ---------- CONFIG ---------- */
+const PASSWORD = "jsb@123";              // 🔑 CHANGE PASSWORD
+const UNLOCK_TIME = 10 * 60 * 1000;      // ⏱️ 10 minutes
+
+let unlockTimer;
+
+/* ---------- LOGIN ---------- */
+function checkPassword() {
+    const input = document.getElementById("password").value;
+
+    if (input === PASSWORD) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("files").classList.remove("hidden");
+
+        unlockTimer = setTimeout(lockFiles, UNLOCK_TIME);
+    } else {
+        document.getElementById("error").style.display = "block";
+    }
+}
+
+/* ---------- AUTO LOCK ---------- */
+function lockFiles() {
+    clearTimeout(unlockTimer);
+
+    document.getElementById("files").classList.add("hidden");
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("password").value = "";
+    document.getElementById("capsWarning").style.display = "none";
+    document.getElementById("error").style.display = "none";
+
+    document.getElementById("password").focus();
+}
+
+/* ---------- FOLDER TOGGLE ---------- */
+function toggleFolder(el) {
+    const content = el.nextElementSibling;
+    content.style.display = content.style.display === "block" ? "none" : "block";
+}
+
+/* ---------- EYE ICON ---------- */
+function togglePassword() {
+    const input = document.getElementById("password");
+    const icon = document.getElementById("eyeIcon");
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.replace("fa-eye-slash", "fa-eye");
+    }
+
+    input.focus();
+}
+
+/* ---------- CAPS LOCK ---------- */
+function checkCapsLock(e) {
+    document.getElementById("capsWarning").style.display =
+        e.getModifierState("CapsLock") ? "block" : "none";
+}
+
+/* ---------- AUTO FOCUS ---------- */
+window.onload = () => {
+    document.getElementById("password").focus();
+};
+</script>
+
+</body>
+</html>

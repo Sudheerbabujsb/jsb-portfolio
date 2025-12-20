@@ -978,7 +978,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 			<div class="container">
 				<div class="hm-footer-copyright text-center">
 					<p>
-						copyright &copy;2026 <br>All Rights Reserved - JSB&reg; <br><a target="_blank" href="./img/hero-slider/6.jpg">⌞ Jangam Sudheer Babu⌝</a>
+						<p>© <span id="year"></span> JSB. <br>All Rights Reserved. <br> <a target="_blank" href="./img/hero-slider/6.jpg">⌞ Jangam Sudheer Babu⌝</a></p>
+						<!-- <a target="_blank" href="./img/hero-slider/6.jpg">⌞ Jangam Sudheer Babu⌝</a> -->
 					</p><!--/p-->
 				</div><!--/.text-center-->
 			</div><!--/.container-->
@@ -1030,6 +1031,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         <script src="assets/js/custom.js"></script>
 
 		<script src="assets/js/contact.js"></script>
+
+		<script>
+    document.getElementById("year").innerText = new Date().getFullYear();
+</script>
 
 <a href="https://api.whatsapp.com/send?phone=919398208072&text=Hi%20JSB%2C%20Can%20I%20get%20more%20Info%20about%20you%20%F0%9F%A4%A9"
    target="_blank"

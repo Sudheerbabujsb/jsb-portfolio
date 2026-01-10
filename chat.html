@@ -13,6 +13,7 @@ body{
   background:#ece5dd;
 }
 .dark{background:#0b141a}
+.hidden{display:none}
 
 /* HEADER */
 .header{
@@ -52,7 +53,7 @@ button{
 }
 
 /* CHAT */
-#chat{display:none;height:100vh}
+#chat{height:100vh}
 #messages{
   height:calc(100vh - 160px);
   overflow-y:auto;
@@ -78,19 +79,9 @@ button{
 .dark .me{background:#005c4b;color:white}
 .dark .her{background:#202c33;color:white}
 
-.time{
-  font-size:10px;
-  text-align:right;
-  color:#555;
-}
+.time{font-size:10px;color:#555;text-align:right}
 .seen{font-size:10px;color:#4fc3f7}
-
-/* TYPING */
-#typing{
-  padding-left:12px;
-  font-size:12px;
-  color:#555;
-}
+#typing{padding-left:12px;font-size:12px;color:#555}
 
 /* INPUT */
 .footer{
@@ -129,8 +120,8 @@ button{
   <button onclick="login()">Login</button>
 </div>
 
-<!-- CHAT -->
-<div id="chat">
+<!-- CHAT (LOCKED) -->
+<div id="chat" class="hidden">
   <div class="header">
     Just Us 💚
     <button onclick="toggleDark()">🌙</button>
@@ -148,14 +139,19 @@ button{
 <audio id="sound" src="https://www.fesliyanstudios.com/play-mp3/387"></audio>
 
 <script type="module">
+/* Firebase SDKs */
 import { initializeApp } from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
 import {
   getAuth,
   signInWithEmailAndPassword,
-  onAuthStateChanged
+  onAuthStateChanged,
+  setPersistence,
+  browserSessionPersistence
 } from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
 import {
   getDatabase,
   ref,
@@ -168,7 +164,7 @@ import {
 } from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-/* 🔐 FIREBASE CONFIG */
+/* 🔐 FIREBASE CONFIG (YOUR PROJECT) */
 const firebaseConfig = {
   apiKey: "AIzaSyBd14pfFYZVkAIDHumbRwo4qP79QRz0Os0",
   authDomain: "jss1207.firebaseapp.com",
@@ -179,67 +175,71 @@ const firebaseConfig = {
   appId: "1:121988951850:web:f8af63653cab1bd8eb3853"
 };
 
+/* INIT */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
+/* 🔒 FORCE LOGIN EVERY TIME */
+setPersistence(auth, browserSessionPersistence);
+
 /* LOGIN */
-window.login = () => {
+window.login = ()=>{
   signInWithEmailAndPassword(auth,email.value,password.value)
   .catch(()=>alert("Wrong email or password ❌"));
 };
 
-/* AUTH STATE — IMPORTANT FIX */
+/* AUTH GUARD */
 onAuthStateChanged(auth,user=>{
-  if(!user) return;
+  if(!user){
+    chat.classList.add("hidden");
+    loginBox.classList.remove("hidden");
+    return;
+  }
 
-  loginBox.style.display="none";
-  chat.style.display="block";
+  loginBox.classList.add("hidden");
+  chat.classList.remove("hidden");
   messages.innerHTML="";
 
   const messagesRef = ref(db,"messages");
 
   onChildAdded(messagesRef,snap=>{
-    const m = snap.val();
-    const div = document.createElement("div");
-
+    const m=snap.val();
+    const div=document.createElement("div");
     div.className =
       m.uid===auth.currentUser.uid ? "me":"her";
 
-    const t = new Date(m.time).toLocaleTimeString([],{
+    const t=new Date(m.time).toLocaleTimeString([],{
       hour:'2-digit',minute:'2-digit'
     });
 
-    div.innerHTML = `
+    div.innerHTML=`
       ${m.text}
       <div class="time">
         ${t}
         ${m.uid===auth.currentUser.uid
           ? `<span class="seen">${m.seen?" ✓✓":" ✓"}</span>`:""}
-      </div>
-    `;
+      </div>`;
 
     messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
+    messages.scrollTop=messages.scrollHeight;
 
     if(m.uid!==auth.currentUser.uid && !m.seen){
       update(ref(db,"messages/"+snap.key),{seen:true});
-      document.getElementById("sound").play();
+      sound.play();
     }
   });
 });
 
 /* SEND MESSAGE */
-window.send = ()=>{
-  if(msg.value.trim()==="") return;
-
+window.send=()=>{
+  if(msg.value.trim()==="")return;
   push(ref(db,"messages"),{
     text:msg.value,
     uid:auth.currentUser.uid,
     time:Date.now(),
     seen:false
   });
-
   msg.value="";
 };
 
@@ -254,7 +254,7 @@ onValue(ref(db,"typing"),snap=>{
 });
 
 /* DARK MODE */
-window.toggleDark = ()=>{
+window.toggleDark=()=>{
   document.body.classList.toggle("dark");
 };
 </script>

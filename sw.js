@@ -3,7 +3,7 @@ self.addEventListener("install", e => {
     caches.open("justus-cache").then(cache =>
       cache.addAll([
         "/",
-        "/index.html",
+        "/chat.html",
         "/manifest.json"
       ])
     )

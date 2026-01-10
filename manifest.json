@@ -1,7 +1,7 @@
 {
   "name": "Just Us 💚",
   "short_name": "JustUs",
-  "start_url": "/index.html",
+  "start_url": "/chat.html",
   "display": "standalone",
   "background_color": "#075e54",
   "theme_color": "#075e54",

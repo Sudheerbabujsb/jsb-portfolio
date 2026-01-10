@@ -36,7 +36,7 @@ button{background:#25d366;color:white;border:none}
 
 .msg{
   max-width:75%;padding:8px;margin-bottom:6px;
-  border-radius:8px;position:relative
+  border-radius:8px
 }
 .me{margin-left:auto;background:#dcf8c6;border-radius:8px 0 8px 8px}
 .her{background:white;border-radius:0 8px 8px 8px}
@@ -44,6 +44,9 @@ button{background:#25d366;color:white;border:none}
 .dark .her{background:#202c33;color:white}
 
 .time{font-size:10px;text-align:right;color:#555}
+.edited{font-size:10px;color:#777;font-style:italic;margin-left:4px}
+.deleted{font-style:italic;color:#777}
+
 .actions{
   font-size:11px;color:#666;
   display:flex;gap:10px;justify-content:flex-end
@@ -55,10 +58,7 @@ button{background:#25d366;color:white;border:none}
 }
 .dark .footer{background:#1f2c34}
 #msg{flex:1;padding:10px;border-radius:20px}
-.sendBtn{
-  width:45px;height:45px;border-radius:50%;
-  margin-left:6px;font-size:18px
-}
+.sendBtn{width:45px;height:45px;border-radius:50%;margin-left:6px}
 </style>
 </head>
 
@@ -102,14 +102,12 @@ import {
   ref,
   push,
   update,
-  remove,
   onChildAdded,
-  onChildChanged,
-  onChildRemoved
+  onChildChanged
 } from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-/* FIREBASE CONFIG */
+/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyBd14pfFYZVkAIDHumbRwo4qP79QRz0Os0",
   authDomain: "jss1207.firebaseapp.com",
@@ -121,8 +119,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* FORCE LOGIN EVERY REFRESH */
+/* FORCE LOGIN */
 signOut(auth);
+
+/* LOCAL HIDDEN MESSAGES (KEY FIX) */
+const hiddenForMe = new Set();
 
 /* LOGIN */
 window.login = ()=>{
@@ -130,7 +131,7 @@ window.login = ()=>{
   .catch(()=>alert("Wrong email or password"));
 };
 
-/* AUTH GUARD */
+/* AUTH */
 onAuthStateChanged(auth,user=>{
   if(!user){
     loginBox.classList.remove("hidden");
@@ -141,48 +142,32 @@ onAuthStateChanged(auth,user=>{
   loginBox.classList.add("hidden");
   chat.classList.remove("hidden");
   messages.innerHTML="";
+  hiddenForMe.clear();
 
   const uid = auth.currentUser.uid;
   const msgRef = ref(db,"messages");
 
-  /* ADD */
   onChildAdded(msgRef,snap=>{
-    renderMessage(snap.key,snap.val());
+    render(snap.key,snap.val());
   });
 
-  /* EDIT */
   onChildChanged(msgRef,snap=>{
-    const el=document.querySelector("#m-"+snap.key+" .text");
-    if(el) el.innerText=snap.val().text;
+    render(snap.key,snap.val());
   });
 
-  /* DELETE */
-  onChildRemoved(msgRef,snap=>{
-    const el=document.getElementById("m-"+snap.key);
-    if(el) el.remove();
-  });
+  function render(id,m){
+    /* HARD BLOCK: DELETE FOR ME */
+    if(hiddenForMe.has(id)) return;
 
-  function renderMessage(id,m){
-    const div=document.createElement("div");
-    div.className="msg "+(m.uid===uid?"me":"her");
-    div.id="m-"+id;
+    let el=document.getElementById("m-"+id);
+    if(!el){
+      el=document.createElement("div");
+      el.id="m-"+id;
+      el.className="msg "+(m.uid===uid?"me":"her");
+      messages.appendChild(el);
+    }
 
-    div.innerHTML=`
-      <div class="text">${m.text}</div>
-      <div class="time">
-        ${new Date(m.time).toLocaleTimeString([],{
-          hour:'2-digit',minute:'2-digit'
-        })}
-        ${m.uid===uid?(m.seen?" ✓✓":" ✓"):""}
-      </div>
-      ${m.uid===uid?`
-        <div class="actions">
-          <span onclick="editMsg('${id}')">edit</span>
-          <span onclick="delMsg('${id}')">delete</span>
-        </div>`:""}
-    `;
-
-    messages.appendChild(div);
+    el.innerHTML = buildHTML(id,m,uid);
     messages.scrollTop=messages.scrollHeight;
 
     if(m.uid!==uid && !m.seen){
@@ -198,7 +183,9 @@ window.send=()=>{
     text:msg.value,
     uid:auth.currentUser.uid,
     time:Date.now(),
-    seen:false
+    seen:false,
+    edited:false,
+    deleted:false
   });
   msg.value="";
 };
@@ -207,14 +194,58 @@ window.send=()=>{
 window.editMsg=(id)=>{
   const el=document.querySelector("#m-"+id+" .text");
   const t=prompt("Edit message",el.innerText);
-  if(t!==null) update(ref(db,"messages/"+id),{text:t});
+  if(t!==null){
+    update(ref(db,"messages/"+id),{
+      text:t,
+      edited:true
+    });
+  }
 };
 
-/* DELETE */
-window.delMsg=(id)=>{
-  if(confirm("Delete this message?"))
-    remove(ref(db,"messages/"+id));
+/* ✅ DELETE FOR ME (100% FIXED) */
+window.delForMe=(id)=>{
+  hiddenForMe.add(id);        // local hard block
+  const el=document.getElementById("m-"+id);
+  if(el) el.remove();
 };
+
+/* DELETE FOR EVERYONE */
+window.delForAll=(id)=>{
+  if(confirm("Delete for everyone?")){
+    update(ref(db,"messages/"+id),{
+      text:"",
+      deleted:true
+    });
+  }
+};
+
+/* TEMPLATE */
+function buildHTML(id,m,uid){
+  if(m.deleted){
+    return `
+      <div class="deleted">This message was deleted</div>
+      <div class="actions">
+        <span onclick="delForMe('${id}')">delete for me</span>
+      </div>`;
+  }
+
+  return `
+    <div class="text">${m.text}</div>
+    <div class="time">
+      ${new Date(m.time).toLocaleTimeString([],{
+        hour:'2-digit',minute:'2-digit'
+      })}
+      ${m.edited?`<span class="edited">(edited)</span>`:""}
+      ${m.uid===uid?(m.seen?" ✓✓":" ✓"):""}
+    </div>
+    ${m.uid===uid?`
+      <div class="actions">
+        <span onclick="editMsg('${id}')">edit</span>
+        <span onclick="delForMe('${id}')">delete for me</span>
+        <span onclick="delForAll('${id}')">delete for everyone</span>
+      </div>`:""}
+  `;
+}
 
 /* DARK MODE */
 window.toggleDark=()=>{

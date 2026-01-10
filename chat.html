@@ -15,8 +15,7 @@ body{margin:0;font-family:Arial;background:#ece5dd}
   display:flex;justify-content:space-between;align-items:center
 }
 .dark .header{background:#1f2c34}
-
-#status{font-size:12px;opacity:.8}
+#status{font-size:12px;opacity:.85}
 
 #loginBox{
   max-width:360px;margin:60px auto;background:white;
@@ -47,9 +46,10 @@ button{background:#25d366;color:white;border:none}
 
 .time{font-size:10px;text-align:right;color:#555}
 .actions{
-  font-size:11px;cursor:pointer;color:#666;
-  display:flex;gap:8px;justify-content:flex-end
+  font-size:11px;color:#666;
+  display:flex;gap:10px;justify-content:flex-end
 }
+.actions span{cursor:pointer}
 
 #typing{padding-left:12px;font-size:12px;color:#666}
 
@@ -70,8 +70,8 @@ button{background:#25d366;color:white;border:none}
 <!-- LOGIN -->
 <div id="loginBox">
   <h3 align="center">Private Chat 💚</h3>
-  <input id="email" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password">
   <button onclick="login()">Login</button>
 </div>
 
@@ -108,11 +108,13 @@ import {
   getDatabase,
   ref,
   push,
-  onChildAdded,
   update,
   remove,
   set,
   onValue,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved,
   onDisconnect
 } from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
@@ -124,6 +126,7 @@ const firebaseConfig = {
   databaseURL: "https://jss1207-default-rtdb.firebaseio.com",
   projectId: "jss1207"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
@@ -147,34 +150,54 @@ onAuthStateChanged(auth,user=>{
 
   loginBox.classList.add("hidden");
   chat.classList.remove("hidden");
+  messages.innerHTML="";
 
   const uid = auth.currentUser.uid;
 
-  /* ONLINE STATUS */
-  const userRef = ref(db,"users/"+uid);
-  set(userRef,{online:true,lastSeen:Date.now()});
-  onDisconnect(userRef).set({online:false,lastSeen:Date.now()});
+  /* 🔵 PRESENCE (CORRECT) */
+  const myRef = ref(db,"users/"+uid);
+  set(myRef,{online:true,lastSeen:Date.now()});
+  onDisconnect(myRef).set({online:false,lastSeen:Date.now()});
 
   onValue(ref(db,"users"),snap=>{
-    snap.forEach(s=>{
-      if(s.key!==uid){
-        status.innerText = s.val().online
+    snap.forEach(u=>{
+      if(u.key!==uid){
+        const v=u.val();
+        status.innerText = v.online
           ? "online"
-          : "last seen " + new Date(s.val().lastSeen).toLocaleTimeString();
+          : "last seen " + new Date(v.lastSeen).toLocaleTimeString();
       }
     });
   });
 
-  /* MESSAGES */
-  onChildAdded(ref(db,"messages"),snap=>{
-    const m=snap.val();
+  const msgRef = ref(db,"messages");
+
+  /* ➕ ADD */
+  onChildAdded(msgRef,snap=>{
+    renderMessage(snap.key,snap.val());
+  });
+
+  /* ✏️ EDIT */
+  onChildChanged(msgRef,snap=>{
+    const el=document.getElementById("m-"+snap.key);
+    if(el){
+      el.querySelector(".text").innerText = snap.val().text;
+    }
+  });
+
+  /* 🗑 DELETE */
+  onChildRemoved(msgRef,snap=>{
+    const el=document.getElementById("m-"+snap.key);
+    if(el) el.remove();
+  });
+
+  function renderMessage(id,m){
     const div=document.createElement("div");
     div.className="msg "+(m.uid===uid?"me":"her");
+    div.id="m-"+id;
 
     div.innerHTML=`
-      <div contenteditable="${m.uid===uid}" id="txt-${snap.key}">
-        ${m.text}
-      </div>
+      <div class="text">${m.text}</div>
       <div class="time">
         ${new Date(m.time).toLocaleTimeString([],{
           hour:'2-digit',minute:'2-digit'
@@ -183,18 +206,17 @@ onAuthStateChanged(auth,user=>{
       </div>
       ${m.uid===uid?`
         <div class="actions">
-          <span onclick="editMsg('${snap.key}')">edit</span>
-          <span onclick="delMsg('${snap.key}')">delete</span>
+          <span onclick="editMsg('${id}')">edit</span>
+          <span onclick="delMsg('${id}')">delete</span>
         </div>`:""}
     `;
-
     messages.appendChild(div);
     messages.scrollTop=messages.scrollHeight;
 
     if(m.uid!==uid && !m.seen){
-      update(ref(db,"messages/"+snap.key),{seen:true});
+      update(ref(db,"messages/"+id),{seen:true});
     }
-  });
+  }
 });
 
 /* SEND */
@@ -211,8 +233,10 @@ window.send=()=>{
 
 /* EDIT */
 window.editMsg=(id)=>{
-  const text=document.getElementById("txt-"+id).innerText;
-  update(ref(db,"messages/"+id),{text});
+  const el=document.querySelector("#m-"+id+" .text");
+  const newText=prompt("Edit message",el.innerText);
+  if(newText!==null)
+    update(ref(db,"messages/"+id),{text:newText});
 };
 
 /* DELETE */

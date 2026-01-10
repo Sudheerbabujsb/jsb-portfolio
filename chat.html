@@ -134,31 +134,29 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* FORCE LOGIN EVERY REFRESH */
+/* FORCE LOGIN */
 signOut(auth);
 
-/* 🔐 PIN → EMAIL MAP (CHANGE PINS HERE) */
+/* PIN MAP */
 const PIN_MAP = {
   "120700": { email: "Shyni@jsudheerbabu.in", password: "Sudheer@Shyni" },
   "021104": { email: "Sudheer@jsudheerbabu.in", password: "Shyni@Sudheer" }
 };
 
-window.pinLogin = ()=>{
-  const p = pin.value.trim();
-  if(!PIN_MAP[p]) return alert("Wrong PIN ❌");
-  signInWithEmailAndPassword(
-    auth,
-    PIN_MAP[p].email,
-    PIN_MAP[p].password
-  ).catch(()=>alert("Login failed"));
+/* DELETE FOR ME STORAGE */
+const HIDDEN_KEY="hiddenMessages";
+const getHidden=()=>JSON.parse(localStorage.getItem(HIDDEN_KEY)||"[]");
+const saveHidden=a=>localStorage.setItem(HIDDEN_KEY,JSON.stringify(a));
+
+window.pinLogin=()=>{
+  const p=pin.value.trim();
+  if(!PIN_MAP[p]) return alert("Wrong PIN");
+  signInWithEmailAndPassword(auth,PIN_MAP[p].email,PIN_MAP[p].password);
 };
 
-/* MENU STATE */
 let selectedMsgId=null;
-let selectedIsMine=false;
-let selectedMsgTime=0;
+let selectedMsg=null;
 
-/* AUTH */
 onAuthStateChanged(auth,user=>{
   if(!user){
     loginBox.classList.remove("hidden");
@@ -170,24 +168,24 @@ onAuthStateChanged(auth,user=>{
   chat.classList.remove("hidden");
   messages.innerHTML="";
 
-  const uid = user.uid;
-  const msgRef = ref(db,"messages");
+  const uid=user.uid;
+  const msgRef=ref(db,"messages");
 
-  onChildAdded(msgRef,snap=>render(snap.key,snap.val()));
-  onChildChanged(msgRef,snap=>render(snap.key,snap.val()));
+  onChildAdded(msgRef,s=>render(s.key,s.val()));
+  onChildChanged(msgRef,s=>render(s.key,s.val()));
 
   function render(id,m){
+    if(getHidden().includes(id)) return;
+
     let el=document.getElementById("m-"+id);
     if(!el){
       el=document.createElement("div");
       el.id="m-"+id;
       el.className="msg "+(m.uid===uid?"me":"her");
 
-      el.oncontextmenu = e=>openMenu(e,id,m);
+      el.oncontextmenu=e=>openMenu(e,id,m);
       let t;
-      el.ontouchstart=e=>{
-        t=setTimeout(()=>openMenu(e,id,m),600);
-      };
+      el.ontouchstart=e=>t=setTimeout(()=>openMenu(e,id,m),600);
       el.ontouchend=()=>clearTimeout(t);
 
       messages.appendChild(el);
@@ -226,52 +224,58 @@ window.send=()=>{
   msg.value="";
 };
 
-/* OPEN MENU */
+/* MENU */
 function openMenu(e,id,m){
   e.preventDefault();
   selectedMsgId=id;
-  selectedIsMine = m.uid===auth.currentUser.uid;
-  selectedMsgTime = m.time;
+  selectedMsg=m;
 
-  const within10Min = Date.now() - m.time <= 600000;
+  const isMine=m.uid===auth.currentUser.uid;
+  const within10=Date.now()-m.time<=600000;
 
-  editBtn.style.display = selectedIsMine ? "block":"none";
-  delAllBtn.style.display =
-    selectedIsMine && within10Min ? "block":"none";
+  /* IMPORTANT FIX */
+  if(m.deleted){
+    editBtn.style.display="none";
+    delAllBtn.style.display="none";
+  }else{
+    editBtn.style.display=isMine?"block":"none";
+    delAllBtn.style.display=isMine&&within10?"block":"none";
+  }
 
   menu.style.display="block";
   menu.style.top=e.clientY+"px";
   menu.style.left=e.clientX+"px";
 }
 
-/* MENU ACTIONS */
+/* ACTIONS */
 window.editSelected=()=>{
-  if(!selectedIsMine) return;
+  if(selectedMsg.deleted) return;
   const el=document.querySelector("#m-"+selectedMsgId+" .text");
   const t=prompt("Edit message",el.innerText);
   if(t!==null){
-    update(ref(db,"messages/"+selectedMsgId),{
-      text:t, edited:true
-    });
+    update(ref(db,"messages/"+selectedMsgId),{text:t,edited:true});
   }
   closeMenu();
 };
 
 window.deleteForMe=()=>{
+  const h=getHidden();
+  if(!h.includes(selectedMsgId)){
+    h.push(selectedMsgId);
+    saveHidden(h);
+  }
   const el=document.getElementById("m-"+selectedMsgId);
   if(el) el.remove();
   closeMenu();
 };
 
 window.deleteForAll=()=>{
-  if(!selectedIsMine) return;
-  if(Date.now() - selectedMsgTime > 600000){
-    alert("Delete time expired ⏱");
+  if(selectedMsg.deleted) return;
+  if(Date.now()-selectedMsg.time>600000){
+    alert("Delete time expired");
     return;
   }
-  update(ref(db,"messages/"+selectedMsgId),{
-    text:"", deleted:true
-  });
+  update(ref(db,"messages/"+selectedMsgId),{text:"",deleted:true});
   closeMenu();
 };
 
@@ -282,7 +286,6 @@ function closeMenu(){
 
 document.body.onclick=()=>closeMenu();
 
-/* DARK MODE */
 window.toggleDark=()=>{
   document.body.classList.toggle("dark");
 };

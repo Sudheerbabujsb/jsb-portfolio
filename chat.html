@@ -37,7 +37,7 @@ button{background:#25d366;color:white;border:none}
 
 .msg{
   max-width:75%;padding:8px;margin-bottom:6px;
-  border-radius:8px;position:relative
+  border-radius:8px
 }
 .me{margin-left:auto;background:#dcf8c6;border-radius:8px 0 8px 8px}
 .her{background:white;border-radius:0 8px 8px 8px}
@@ -45,10 +45,7 @@ button{background:#25d366;color:white;border:none}
 .dark .her{background:#202c33;color:white}
 
 .time{font-size:10px;text-align:right;color:#555}
-.actions{
-  font-size:11px;color:#666;
-  display:flex;gap:10px;justify-content:flex-end
-}
+.actions{font-size:11px;color:#666;display:flex;gap:10px;justify-content:flex-end}
 .actions span{cursor:pointer}
 
 #typing{padding-left:12px;font-size:12px;color:#666}
@@ -58,10 +55,7 @@ button{background:#25d366;color:white;border:none}
 }
 .dark .footer{background:#1f2c34}
 #msg{flex:1;padding:10px;border-radius:20px}
-.sendBtn{
-  width:45px;height:45px;border-radius:50%;
-  margin-left:6px;font-size:18px
-}
+.sendBtn{width:45px;height:45px;border-radius:50%;margin-left:6px}
 </style>
 </head>
 
@@ -70,7 +64,7 @@ button{background:#25d366;color:white;border:none}
 <!-- LOGIN -->
 <div id="loginBox">
   <h3 align="center">Private Chat 💚</h3>
-  <input id="email" placeholder="Email">
+  <input id="email" placeholder="User">
   <input id="password" type="password">
   <button onclick="login()">Login</button>
 </div>
@@ -131,7 +125,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* FORCE LOGOUT ON REFRESH */
+/* FORCE LOGIN */
 signOut(auth);
 
 /* LOGIN */
@@ -154,38 +148,44 @@ onAuthStateChanged(auth,user=>{
 
   const uid = auth.currentUser.uid;
 
-  /* 🔵 PRESENCE (CORRECT) */
-  const myRef = ref(db,"users/"+uid);
-  set(myRef,{online:true,lastSeen:Date.now()});
-  onDisconnect(myRef).set({online:false,lastSeen:Date.now()});
+  /* ✅ ONLINE / LAST SEEN (CORRECT) */
+  const connectedRef = ref(db, ".info/connected");
+  const userRef = ref(db, "users/" + uid);
 
-  onValue(ref(db,"users"),snap=>{
+  onValue(connectedRef, snap=>{
+    if(snap.val() === true){
+      set(userRef, { online:true, lastSeen:Date.now() });
+      onDisconnect(userRef).set({
+        online:false,
+        lastSeen:Date.now()
+      });
+    }
+  });
+
+  onValue(ref(db,"users"), snap=>{
     snap.forEach(u=>{
-      if(u.key!==uid){
-        const v=u.val();
+      if(u.key !== uid){
+        const v = u.val();
         status.innerText = v.online
           ? "online"
-          : "last seen " + new Date(v.lastSeen).toLocaleTimeString();
+          : "last seen " +
+            new Date(v.lastSeen).toLocaleTimeString();
       }
     });
   });
 
+  /* MESSAGES */
   const msgRef = ref(db,"messages");
 
-  /* ➕ ADD */
   onChildAdded(msgRef,snap=>{
     renderMessage(snap.key,snap.val());
   });
 
-  /* ✏️ EDIT */
   onChildChanged(msgRef,snap=>{
-    const el=document.getElementById("m-"+snap.key);
-    if(el){
-      el.querySelector(".text").innerText = snap.val().text;
-    }
+    const el=document.querySelector("#m-"+snap.key+" .text");
+    if(el) el.innerText=snap.val().text;
   });
 
-  /* 🗑 DELETE */
   onChildRemoved(msgRef,snap=>{
     const el=document.getElementById("m-"+snap.key);
     if(el) el.remove();
@@ -210,6 +210,7 @@ onAuthStateChanged(auth,user=>{
           <span onclick="delMsg('${id}')">delete</span>
         </div>`:""}
     `;
+
     messages.appendChild(div);
     messages.scrollTop=messages.scrollHeight;
 
@@ -234,27 +235,32 @@ window.send=()=>{
 /* EDIT */
 window.editMsg=(id)=>{
   const el=document.querySelector("#m-"+id+" .text");
-  const newText=prompt("Edit message",el.innerText);
-  if(newText!==null)
-    update(ref(db,"messages/"+id),{text:newText});
+  const t=prompt("Edit message",el.innerText);
+  if(t!==null) update(ref(db,"messages/"+id),{text:t});
 };
 
 /* DELETE */
 window.delMsg=(id)=>{
-  if(confirm("Delete this message?"))
+  if(confirm("Delete message?"))
     remove(ref(db,"messages/"+id));
 };
 
-/* TYPING */
+/* ✅ TYPING (CORRECT) */
 msg.oninput=()=>{
-  set(ref(db,"typing"),auth.currentUser.uid);
-  setTimeout(()=>remove(ref(db,"typing")),1200);
+  const tRef = ref(db,"typing/"+auth.currentUser.uid);
+  set(tRef,true);
+  onDisconnect(tRef).remove();
+  setTimeout(()=>remove(tRef),1500);
 };
+
 onValue(ref(db,"typing"),snap=>{
-  typing.innerText =
-    snap.exists() && snap.val()!==auth.currentUser.uid
-    ? "Typing..."
-    : "";
+  let isTyping=false;
+  snap.forEach(t=>{
+    if(t.key!==auth.currentUser.uid){
+      isTyping=true;
+    }
+  });
+  typing.innerText = isTyping ? "Typing..." : "";
 });
 
 /* DARK MODE */

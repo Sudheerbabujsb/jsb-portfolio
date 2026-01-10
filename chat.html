@@ -15,7 +15,6 @@ body{margin:0;font-family:Arial;background:#ece5dd}
   display:flex;justify-content:space-between;align-items:center
 }
 .dark .header{background:#1f2c34}
-#status{font-size:12px;opacity:.85}
 
 #loginBox{
   max-width:360px;margin:60px auto;background:white;
@@ -31,13 +30,13 @@ button{background:#25d366;color:white;border:none}
 
 #chat{height:100vh}
 #messages{
-  height:calc(100vh - 190px);
+  height:calc(100vh - 160px);
   overflow-y:auto;padding:10px
 }
 
 .msg{
   max-width:75%;padding:8px;margin-bottom:6px;
-  border-radius:8px
+  border-radius:8px;position:relative
 }
 .me{margin-left:auto;background:#dcf8c6;border-radius:8px 0 8px 8px}
 .her{background:white;border-radius:0 8px 8px 8px}
@@ -45,17 +44,21 @@ button{background:#25d366;color:white;border:none}
 .dark .her{background:#202c33;color:white}
 
 .time{font-size:10px;text-align:right;color:#555}
-.actions{font-size:11px;color:#666;display:flex;gap:10px;justify-content:flex-end}
+.actions{
+  font-size:11px;color:#666;
+  display:flex;gap:10px;justify-content:flex-end
+}
 .actions span{cursor:pointer}
-
-#typing{padding-left:12px;font-size:12px;color:#666}
 
 .footer{
   display:flex;padding:8px;background:#f0f0f0
 }
 .dark .footer{background:#1f2c34}
 #msg{flex:1;padding:10px;border-radius:20px}
-.sendBtn{width:45px;height:45px;border-radius:50%;margin-left:6px}
+.sendBtn{
+  width:45px;height:45px;border-radius:50%;
+  margin-left:6px;font-size:18px
+}
 </style>
 </head>
 
@@ -64,7 +67,7 @@ button{background:#25d366;color:white;border:none}
 <!-- LOGIN -->
 <div id="loginBox">
   <h3 align="center">Private Chat 💚</h3>
-  <input id="email" placeholder="User">
+  <input id="email" placeholder="Email">
   <input id="password" type="password">
   <button onclick="login()">Login</button>
 </div>
@@ -72,15 +75,11 @@ button{background:#25d366;color:white;border:none}
 <!-- CHAT -->
 <div id="chat" class="hidden">
   <div class="header">
-    <div>
-      Just Us 💚
-      <div id="status">offline</div>
-    </div>
+    <div>Just Us 💚</div>
     <button onclick="toggleDark()">🌙</button>
   </div>
 
   <div id="messages"></div>
-  <div id="typing"></div>
 
   <div class="footer">
     <input id="msg" placeholder="Type a message">
@@ -104,16 +103,13 @@ import {
   push,
   update,
   remove,
-  set,
-  onValue,
   onChildAdded,
   onChildChanged,
-  onChildRemoved,
-  onDisconnect
+  onChildRemoved
 } from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-/* FIREBASE */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyBd14pfFYZVkAIDHumbRwo4qP79QRz0Os0",
   authDomain: "jss1207.firebaseapp.com",
@@ -125,16 +121,16 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* FORCE LOGIN */
+/* FORCE LOGIN EVERY REFRESH */
 signOut(auth);
 
 /* LOGIN */
 window.login = ()=>{
   signInWithEmailAndPassword(auth,email.value,password.value)
-  .catch(()=>alert("Wrong login"));
+  .catch(()=>alert("Wrong email or password"));
 };
 
-/* AUTH */
+/* AUTH GUARD */
 onAuthStateChanged(auth,user=>{
   if(!user){
     loginBox.classList.remove("hidden");
@@ -147,45 +143,20 @@ onAuthStateChanged(auth,user=>{
   messages.innerHTML="";
 
   const uid = auth.currentUser.uid;
-
-  /* ✅ ONLINE / LAST SEEN (CORRECT) */
-  const connectedRef = ref(db, ".info/connected");
-  const userRef = ref(db, "users/" + uid);
-
-  onValue(connectedRef, snap=>{
-    if(snap.val() === true){
-      set(userRef, { online:true, lastSeen:Date.now() });
-      onDisconnect(userRef).set({
-        online:false,
-        lastSeen:Date.now()
-      });
-    }
-  });
-
-  onValue(ref(db,"users"), snap=>{
-    snap.forEach(u=>{
-      if(u.key !== uid){
-        const v = u.val();
-        status.innerText = v.online
-          ? "online"
-          : "last seen " +
-            new Date(v.lastSeen).toLocaleTimeString();
-      }
-    });
-  });
-
-  /* MESSAGES */
   const msgRef = ref(db,"messages");
 
+  /* ADD */
   onChildAdded(msgRef,snap=>{
     renderMessage(snap.key,snap.val());
   });
 
+  /* EDIT */
   onChildChanged(msgRef,snap=>{
     const el=document.querySelector("#m-"+snap.key+" .text");
     if(el) el.innerText=snap.val().text;
   });
 
+  /* DELETE */
   onChildRemoved(msgRef,snap=>{
     const el=document.getElementById("m-"+snap.key);
     if(el) el.remove();
@@ -241,27 +212,9 @@ window.editMsg=(id)=>{
 
 /* DELETE */
 window.delMsg=(id)=>{
-  if(confirm("Delete message?"))
+  if(confirm("Delete this message?"))
     remove(ref(db,"messages/"+id));
 };
-
-/* ✅ TYPING (CORRECT) */
-msg.oninput=()=>{
-  const tRef = ref(db,"typing/"+auth.currentUser.uid);
-  set(tRef,true);
-  onDisconnect(tRef).remove();
-  setTimeout(()=>remove(tRef),1500);
-};
-
-onValue(ref(db,"typing"),snap=>{
-  let isTyping=false;
-  snap.forEach(t=>{
-    if(t.key!==auth.currentUser.uid){
-      isTyping=true;
-    }
-  });
-  typing.innerText = isTyping ? "Typing..." : "";
-});
 
 /* DARK MODE */
 window.toggleDark=()=>{

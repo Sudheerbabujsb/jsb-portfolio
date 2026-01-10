@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#075e54">
 <head>
 <meta charset="UTF-8">
 <title>Just Us 💚</title>
@@ -304,6 +306,12 @@ document.body.onclick=()=>closeMenu();
 window.toggleDark=()=>{
   document.body.classList.toggle("dark");
 };
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
 </script>
 
 </body>

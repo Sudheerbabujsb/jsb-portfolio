@@ -143,7 +143,7 @@ const PIN_MAP = {
   "021104": { email: "Sudheer@jsudheerbabu.in", password: "Shyni@Sudheer" }
 };
 
-/* DELETE FOR ME STORAGE */
+/* DELETE FOR ME (PERSISTENT) */
 const HIDDEN_KEY="hiddenMessages";
 const getHidden=()=>JSON.parse(localStorage.getItem(HIDDEN_KEY)||"[]");
 const saveHidden=a=>localStorage.setItem(HIDDEN_KEY,JSON.stringify(a));
@@ -154,9 +154,10 @@ window.pinLogin=()=>{
   signInWithEmailAndPassword(auth,PIN_MAP[p].email,PIN_MAP[p].password);
 };
 
+/* MENU STATE */
 let selectedMsgId=null;
-let selectedMsg=null;
 
+/* AUTH */
 onAuthStateChanged(auth,user=>{
   if(!user){
     loginBox.classList.remove("hidden");
@@ -183,13 +184,18 @@ onAuthStateChanged(auth,user=>{
       el.id="m-"+id;
       el.className="msg "+(m.uid===uid?"me":"her");
 
-      el.oncontextmenu=e=>openMenu(e,id,m);
+      el.oncontextmenu=e=>openMenu(e,id);
       let t;
-      el.ontouchstart=e=>t=setTimeout(()=>openMenu(e,id,m),600);
+      el.ontouchstart=e=>t=setTimeout(()=>openMenu(e,id),600);
       el.ontouchend=()=>clearTimeout(t);
 
       messages.appendChild(el);
     }
+
+    /* 🔑 STORE LIVE STATE ON DOM */
+    el.dataset.uid = m.uid;
+    el.dataset.time = m.time;
+    el.dataset.deleted = m.deleted ? "1" : "0";
 
     el.innerHTML = m.deleted
       ? `<div class="deleted">This message was deleted</div>`
@@ -206,6 +212,7 @@ onAuthStateChanged(auth,user=>{
     if(m.uid!==uid && !m.seen){
       update(ref(db,"messages/"+id),{seen:true});
     }
+
     messages.scrollTop=messages.scrollHeight;
   }
 });
@@ -224,23 +231,23 @@ window.send=()=>{
   msg.value="";
 };
 
-/* MENU */
-function openMenu(e,id,m){
+/* MENU OPEN (FIXED) */
+function openMenu(e,id){
   e.preventDefault();
   selectedMsgId=id;
-  selectedMsg=m;
 
-  const isMine=m.uid===auth.currentUser.uid;
-  const within10=Date.now()-m.time<=600000;
+  const el=document.getElementById("m-"+id);
+  const isMine = el.dataset.uid === auth.currentUser.uid;
+  const isDeleted = el.dataset.deleted === "1";
+  const msgTime = Number(el.dataset.time);
+  const within10 = Date.now()-msgTime <= 600000;
 
-  /* IMPORTANT FIX */
-  if(m.deleted){
-    editBtn.style.display="none";
-    delAllBtn.style.display="none";
-  }else{
-    editBtn.style.display=isMine?"block":"none";
-    delAllBtn.style.display=isMine&&within10?"block":"none";
-  }
+  /* ✅ CORRECT PERMISSION LOGIC */
+  editBtn.style.display =
+    (!isDeleted && isMine) ? "block" : "none";
+
+  delAllBtn.style.display =
+    (!isDeleted && isMine && within10) ? "block" : "none";
 
   menu.style.display="block";
   menu.style.top=e.clientY+"px";
@@ -249,11 +256,15 @@ function openMenu(e,id,m){
 
 /* ACTIONS */
 window.editSelected=()=>{
-  if(selectedMsg.deleted) return;
-  const el=document.querySelector("#m-"+selectedMsgId+" .text");
-  const t=prompt("Edit message",el.innerText);
+  const el=document.getElementById("m-"+selectedMsgId);
+  if(el.dataset.deleted==="1") return;
+
+  const textEl=el.querySelector(".text");
+  const t=prompt("Edit message",textEl.innerText);
   if(t!==null){
-    update(ref(db,"messages/"+selectedMsgId),{text:t,edited:true});
+    update(ref(db,"messages/"+selectedMsgId),{
+      text:t,edited:true
+    });
   }
   closeMenu();
 };
@@ -270,12 +281,16 @@ window.deleteForMe=()=>{
 };
 
 window.deleteForAll=()=>{
-  if(selectedMsg.deleted) return;
-  if(Date.now()-selectedMsg.time>600000){
+  const el=document.getElementById("m-"+selectedMsgId);
+  if(el.dataset.deleted==="1") return;
+
+  if(Date.now()-Number(el.dataset.time)>600000){
     alert("Delete time expired");
     return;
   }
-  update(ref(db,"messages/"+selectedMsgId),{text:"",deleted:true});
+  update(ref(db,"messages/"+selectedMsgId),{
+    text:"",deleted:true
+  });
   closeMenu();
 };
 

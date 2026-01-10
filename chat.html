@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Just Us 💚</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-*{box-sizing:border-box}
 body{margin:0;font-family:Arial;background:#ece5dd}
 .hidden{display:none}
 .dark{background:#0b141a}
 
 .header{
-  background:#075e54;color:white;
-  padding:12px;font-weight:bold;
-  display:flex;justify-content:space-between
+  background:#075e54;color:white;padding:12px;
+  display:flex;justify-content:space-between;align-items:center
 }
 .dark .header{background:#1f2c34}
 
+#status{font-size:12px;opacity:.8}
+
 #loginBox{
-  max-width:360px;margin:60px auto;
-  background:white;padding:20px;border-radius:8px
+  max-width:360px;margin:60px auto;background:white;
+  padding:20px;border-radius:8px
 }
 .dark #loginBox{background:#1f2c34;color:white}
 
@@ -32,24 +32,24 @@ button{background:#25d366;color:white;border:none}
 
 #chat{height:100vh}
 #messages{
-  height:calc(100vh - 170px);
+  height:calc(100vh - 190px);
   overflow-y:auto;padding:10px
 }
 
-.me{
-  background:#dcf8c6;max-width:75%;
-  margin-left:auto;padding:8px;
-  border-radius:8px 0 8px 8px
+.msg{
+  max-width:75%;padding:8px;margin-bottom:6px;
+  border-radius:8px;position:relative
 }
-.her{
-  background:white;max-width:75%;
-  padding:8px;border-radius:0 8px 8px 8px
-}
+.me{margin-left:auto;background:#dcf8c6;border-radius:8px 0 8px 8px}
+.her{background:white;border-radius:0 8px 8px 8px}
 .dark .me{background:#005c4b;color:white}
 .dark .her{background:#202c33;color:white}
 
 .time{font-size:10px;text-align:right;color:#555}
-.seen{font-size:10px;color:#4fc3f7}
+.actions{
+  font-size:11px;cursor:pointer;color:#666;
+  display:flex;gap:8px;justify-content:flex-end
+}
 
 #typing{padding-left:12px;font-size:12px;color:#666}
 
@@ -57,13 +57,10 @@ button{background:#25d366;color:white;border:none}
   display:flex;padding:8px;background:#f0f0f0
 }
 .dark .footer{background:#1f2c34}
-
-#msg{
-  flex:1;padding:10px;border-radius:20px
-}
+#msg{flex:1;padding:10px;border-radius:20px}
 .sendBtn{
-  margin-left:6px;width:45px;height:45px;
-  border-radius:50%;font-size:18px
+  width:45px;height:45px;border-radius:50%;
+  margin-left:6px;font-size:18px
 }
 </style>
 </head>
@@ -81,7 +78,10 @@ button{background:#25d366;color:white;border:none}
 <!-- CHAT -->
 <div id="chat" class="hidden">
   <div class="header">
-    Just Us 💚
+    <div>
+      Just Us 💚
+      <div id="status">offline</div>
+    </div>
     <button onclick="toggleDark()">🌙</button>
   </div>
 
@@ -110,25 +110,25 @@ import {
   push,
   onChildAdded,
   update,
-  set,
   remove,
-  onValue
+  set,
+  onValue,
+  onDisconnect
 } from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-/* FIREBASE CONFIG */
+/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyBd14pfFYZVkAIDHumbRwo4qP79QRz0Os0",
   authDomain: "jss1207.firebaseapp.com",
   databaseURL: "https://jss1207-default-rtdb.firebaseio.com",
   projectId: "jss1207"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* 🔒 FORCE LOGOUT ON REFRESH (REAL FIX) */
+/* FORCE LOGOUT ON REFRESH */
 signOut(auth);
 
 /* LOGIN */
@@ -137,7 +137,7 @@ window.login = ()=>{
   .catch(()=>alert("Wrong login"));
 };
 
-/* AUTH GUARD */
+/* AUTH */
 onAuthStateChanged(auth,user=>{
   if(!user){
     loginBox.classList.remove("hidden");
@@ -147,32 +147,51 @@ onAuthStateChanged(auth,user=>{
 
   loginBox.classList.add("hidden");
   chat.classList.remove("hidden");
-  messages.innerHTML="";
 
-  const messagesRef = ref(db,"messages");
+  const uid = auth.currentUser.uid;
 
-  onChildAdded(messagesRef,snap=>{
+  /* ONLINE STATUS */
+  const userRef = ref(db,"users/"+uid);
+  set(userRef,{online:true,lastSeen:Date.now()});
+  onDisconnect(userRef).set({online:false,lastSeen:Date.now()});
+
+  onValue(ref(db,"users"),snap=>{
+    snap.forEach(s=>{
+      if(s.key!==uid){
+        status.innerText = s.val().online
+          ? "online"
+          : "last seen " + new Date(s.val().lastSeen).toLocaleTimeString();
+      }
+    });
+  });
+
+  /* MESSAGES */
+  onChildAdded(ref(db,"messages"),snap=>{
     const m=snap.val();
     const div=document.createElement("div");
-    div.className =
-      m.uid===auth.currentUser.uid ? "me":"her";
-
-    const t=new Date(m.time).toLocaleTimeString([],{
-      hour:'2-digit',minute:'2-digit'
-    });
+    div.className="msg "+(m.uid===uid?"me":"her");
 
     div.innerHTML=`
-      ${m.text}
+      <div contenteditable="${m.uid===uid}" id="txt-${snap.key}">
+        ${m.text}
+      </div>
       <div class="time">
-        ${t}
-        ${m.uid===auth.currentUser.uid
-          ? `<span class="seen">${m.seen?" ✓✓":" ✓"}</span>`:""}
-      </div>`;
+        ${new Date(m.time).toLocaleTimeString([],{
+          hour:'2-digit',minute:'2-digit'
+        })}
+        ${m.uid===uid?(m.seen?" ✓✓":" ✓"):""}
+      </div>
+      ${m.uid===uid?`
+        <div class="actions">
+          <span onclick="editMsg('${snap.key}')">edit</span>
+          <span onclick="delMsg('${snap.key}')">delete</span>
+        </div>`:""}
+    `;
 
     messages.appendChild(div);
     messages.scrollTop=messages.scrollHeight;
 
-    if(m.uid!==auth.currentUser.uid && !m.seen){
+    if(m.uid!==uid && !m.seen){
       update(ref(db,"messages/"+snap.key),{seen:true});
     }
   });
@@ -190,16 +209,26 @@ window.send=()=>{
   msg.value="";
 };
 
-/* ✅ PERFECT TYPING LOGIC */
-msg.oninput=()=>{
-  set(ref(db,"typing/status"),auth.currentUser.uid);
-  setTimeout(()=>remove(ref(db,"typing/status")),1200);
+/* EDIT */
+window.editMsg=(id)=>{
+  const text=document.getElementById("txt-"+id).innerText;
+  update(ref(db,"messages/"+id),{text});
 };
 
-onValue(ref(db,"typing/status"),snap=>{
-  if(!snap.exists()) return typing.innerText="";
+/* DELETE */
+window.delMsg=(id)=>{
+  if(confirm("Delete this message?"))
+    remove(ref(db,"messages/"+id));
+};
+
+/* TYPING */
+msg.oninput=()=>{
+  set(ref(db,"typing"),auth.currentUser.uid);
+  setTimeout(()=>remove(ref(db,"typing")),1200);
+};
+onValue(ref(db,"typing"),snap=>{
   typing.innerText =
-    snap.val()!==auth.currentUser.uid
+    snap.exists() && snap.val()!==auth.currentUser.uid
     ? "Typing..."
     : "";
 });

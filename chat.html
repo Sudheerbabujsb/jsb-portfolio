@@ -17,14 +17,14 @@ body{margin:0;font-family:Arial;background:#ece5dd}
 .dark .header{background:#1f2c34}
 
 #loginBox{
-  max-width:360px;margin:60px auto;background:white;
-  padding:20px;border-radius:8px
+  max-width:320px;margin:80px auto;background:white;
+  padding:20px;border-radius:8px;text-align:center
 }
 .dark #loginBox{background:#1f2c34;color:white}
 
 input,button{
-  width:100%;padding:10px;margin-top:8px;
-  border-radius:5px;border:1px solid #ccc
+  width:100%;padding:12px;margin-top:10px;
+  border-radius:6px;border:1px solid #ccc;font-size:16px
 }
 button{background:#25d366;color:white;border:none}
 
@@ -56,16 +56,12 @@ button{background:#25d366;color:white;border:none}
 
 /* CONTEXT MENU */
 #menu{
-  position:fixed;
-  background:white;
-  border-radius:6px;
+  position:fixed;background:white;border-radius:6px;
   box-shadow:0 2px 10px rgba(0,0,0,.3);
-  display:none;
-  z-index:999
+  display:none;z-index:999
 }
 #menu div{
-  padding:10px 14px;
-  cursor:pointer;
+  padding:12px 16px;cursor:pointer;
   border-bottom:1px solid #eee
 }
 #menu div:last-child{border-bottom:none}
@@ -77,12 +73,11 @@ button{background:#25d366;color:white;border:none}
 
 <body>
 
-<!-- LOGIN -->
+<!-- PIN LOGIN -->
 <div id="loginBox">
-  <h3 align="center">Private Chat 💚</h3>
-  <input id="email" placeholder="Email">
-  <input id="password" type="password">
-  <button onclick="login()">Login</button>
+  <h3>Enter PIN 🔐</h3>
+  <input id="pin" type="password" placeholder="Enter PIN">
+  <button onclick="pinLogin()">Unlock</button>
 </div>
 
 <!-- CHAT -->
@@ -100,10 +95,10 @@ button{background:#25d366;color:white;border:none}
   </div>
 </div>
 
-<!-- CONTEXT MENU -->
+<!-- LONG PRESS MENU -->
 <div id="menu">
   <div id="editBtn" onclick="editSelected()">✏️ Edit</div>
-  <div id="delMeBtn" onclick="deleteForMe()">🗑 Delete for me</div>
+  <div onclick="deleteForMe()">🗑 Delete for me</div>
   <div id="delAllBtn" onclick="deleteForAll()">🚫 Delete for everyone</div>
 </div>
 
@@ -127,7 +122,7 @@ import {
 } from
 "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-/* FIREBASE */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyBd14pfFYZVkAIDHumbRwo4qP79QRz0Os0",
   authDomain: "jss1207.firebaseapp.com",
@@ -139,18 +134,29 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* FORCE LOGIN */
+/* FORCE LOGIN EVERY REFRESH */
 signOut(auth);
 
-/* MENU STATE */
-let selectedMsgId = null;
-let selectedIsMine = false;
-
-/* LOGIN */
-window.login = ()=>{
-  signInWithEmailAndPassword(auth,email.value,password.value)
-  .catch(()=>alert("Wrong email or password"));
+/* 🔐 PIN → EMAIL MAP (CHANGE PINS HERE) */
+const PIN_MAP = {
+  "120700": { email: "Shyni@jsudheerbabu.in", password: "Sudheer@Shyni" },
+  "021104": { email: "Sudheer@jsudheerbabu.in", password: "Shyni@Sudheer" }
 };
+
+window.pinLogin = ()=>{
+  const p = pin.value.trim();
+  if(!PIN_MAP[p]) return alert("Wrong PIN ❌");
+  signInWithEmailAndPassword(
+    auth,
+    PIN_MAP[p].email,
+    PIN_MAP[p].password
+  ).catch(()=>alert("Login failed"));
+};
+
+/* MENU STATE */
+let selectedMsgId=null;
+let selectedIsMine=false;
+let selectedMsgTime=0;
 
 /* AUTH */
 onAuthStateChanged(auth,user=>{
@@ -164,16 +170,11 @@ onAuthStateChanged(auth,user=>{
   chat.classList.remove("hidden");
   messages.innerHTML="";
 
-  const uid = auth.currentUser.uid;
+  const uid = user.uid;
   const msgRef = ref(db,"messages");
 
-  onChildAdded(msgRef,snap=>{
-    render(snap.key,snap.val());
-  });
-
-  onChildChanged(msgRef,snap=>{
-    render(snap.key,snap.val());
-  });
+  onChildAdded(msgRef,snap=>render(snap.key,snap.val()));
+  onChildChanged(msgRef,snap=>render(snap.key,snap.val()));
 
   function render(id,m){
     let el=document.getElementById("m-"+id);
@@ -182,13 +183,12 @@ onAuthStateChanged(auth,user=>{
       el.id="m-"+id;
       el.className="msg "+(m.uid===uid?"me":"her");
 
-      /* LONG PRESS / RIGHT CLICK */
-      el.oncontextmenu = e => openMenu(e,id,m.uid===uid);
+      el.oncontextmenu = e=>openMenu(e,id,m);
       let t;
-      el.ontouchstart = e=>{
-        t=setTimeout(()=>openMenu(e,id,m.uid===uid),600);
+      el.ontouchstart=e=>{
+        t=setTimeout(()=>openMenu(e,id,m),600);
       };
-      el.ontouchend = ()=>clearTimeout(t);
+      el.ontouchend=()=>clearTimeout(t);
 
       messages.appendChild(el);
     }
@@ -208,7 +208,6 @@ onAuthStateChanged(auth,user=>{
     if(m.uid!==uid && !m.seen){
       update(ref(db,"messages/"+id),{seen:true});
     }
-
     messages.scrollTop=messages.scrollHeight;
   }
 });
@@ -227,16 +226,18 @@ window.send=()=>{
   msg.value="";
 };
 
-/* OPEN MENU (OWNERSHIP CHECK) */
-function openMenu(e,id,isMine){
+/* OPEN MENU */
+function openMenu(e,id,m){
   e.preventDefault();
   selectedMsgId=id;
-  selectedIsMine=isMine;
+  selectedIsMine = m.uid===auth.currentUser.uid;
+  selectedMsgTime = m.time;
 
-  /* PERMISSION ENFORCEMENT */
-  editBtn.style.display = isMine ? "block" : "none";
-  delAllBtn.style.display = isMine ? "block" : "none";
-  delMeBtn.style.display = "block"; // always allowed
+  const within10Min = Date.now() - m.time <= 600000;
+
+  editBtn.style.display = selectedIsMine ? "block":"none";
+  delAllBtn.style.display =
+    selectedIsMine && within10Min ? "block":"none";
 
   menu.style.display="block";
   menu.style.top=e.clientY+"px";
@@ -245,13 +246,12 @@ function openMenu(e,id,isMine){
 
 /* MENU ACTIONS */
 window.editSelected=()=>{
-  if(!selectedIsMine) return; // hard block
+  if(!selectedIsMine) return;
   const el=document.querySelector("#m-"+selectedMsgId+" .text");
   const t=prompt("Edit message",el.innerText);
   if(t!==null){
     update(ref(db,"messages/"+selectedMsgId),{
-      text:t,
-      edited:true
+      text:t, edited:true
     });
   }
   closeMenu();
@@ -264,23 +264,23 @@ window.deleteForMe=()=>{
 };
 
 window.deleteForAll=()=>{
-  if(!selectedIsMine) return; // hard block
-  if(confirm("Delete for everyone?")){
-    update(ref(db,"messages/"+selectedMsgId),{
-      text:"",
-      deleted:true
-    });
+  if(!selectedIsMine) return;
+  if(Date.now() - selectedMsgTime > 600000){
+    alert("Delete time expired ⏱");
+    return;
   }
+  update(ref(db,"messages/"+selectedMsgId),{
+    text:"", deleted:true
+  });
   closeMenu();
 };
 
 function closeMenu(){
   menu.style.display="none";
   selectedMsgId=null;
-  selectedIsMine=false;
 }
 
-document.body.onclick = ()=>closeMenu();
+document.body.onclick=()=>closeMenu();
 
 /* DARK MODE */
 window.toggleDark=()=>{

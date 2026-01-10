@@ -36,7 +36,8 @@ button{background:#25d366;color:white;border:none}
 
 .msg{
   max-width:75%;padding:8px;margin-bottom:6px;
-  border-radius:8px
+  border-radius:8px;position:relative;
+  user-select:none
 }
 .me{margin-left:auto;background:#dcf8c6;border-radius:8px 0 8px 8px}
 .her{background:white;border-radius:0 8px 8px 8px}
@@ -47,18 +48,31 @@ button{background:#25d366;color:white;border:none}
 .edited{font-size:10px;color:#777;font-style:italic;margin-left:4px}
 .deleted{font-style:italic;color:#777}
 
-.actions{
-  font-size:11px;color:#666;
-  display:flex;gap:10px;justify-content:flex-end
-}
-.actions span{cursor:pointer}
-
 .footer{
   display:flex;padding:8px;background:#f0f0f0
 }
 .dark .footer{background:#1f2c34}
 #msg{flex:1;padding:10px;border-radius:20px}
 .sendBtn{width:45px;height:45px;border-radius:50%;margin-left:6px}
+
+/* CONTEXT MENU */
+#menu{
+  position:fixed;
+  background:white;
+  border-radius:6px;
+  box-shadow:0 2px 10px rgba(0,0,0,.3);
+  display:none;
+  z-index:999
+}
+#menu div{
+  padding:10px 14px;
+  cursor:pointer;
+  border-bottom:1px solid #eee
+}
+#menu div:last-child{border-bottom:none}
+#menu div:hover{background:#f0f0f0}
+.dark #menu{background:#1f2c34;color:white}
+.dark #menu div:hover{background:#333}
 </style>
 </head>
 
@@ -85,6 +99,13 @@ button{background:#25d366;color:white;border:none}
     <input id="msg" placeholder="Type a message">
     <button class="sendBtn" onclick="send()">➤</button>
   </div>
+</div>
+
+<!-- LONG PRESS MENU -->
+<div id="menu">
+  <div onclick="editSelected()">✏️ Edit</div>
+  <div onclick="deleteForMe()">🗑 Delete for me</div>
+  <div onclick="deleteForAll()">🚫 Delete for everyone</div>
 </div>
 
 <script type="module">
@@ -122,8 +143,8 @@ const db = getDatabase(app);
 /* FORCE LOGIN */
 signOut(auth);
 
-/* LOCAL HIDDEN MESSAGES (KEY FIX) */
-const hiddenForMe = new Set();
+/* CONTEXT STATE */
+let selectedMsgId = null;
 
 /* LOGIN */
 window.login = ()=>{
@@ -142,7 +163,6 @@ onAuthStateChanged(auth,user=>{
   loginBox.classList.add("hidden");
   chat.classList.remove("hidden");
   messages.innerHTML="";
-  hiddenForMe.clear();
 
   const uid = auth.currentUser.uid;
   const msgRef = ref(db,"messages");
@@ -156,18 +176,35 @@ onAuthStateChanged(auth,user=>{
   });
 
   function render(id,m){
-    /* HARD BLOCK: DELETE FOR ME */
-    if(hiddenForMe.has(id)) return;
-
     let el=document.getElementById("m-"+id);
     if(!el){
       el=document.createElement("div");
       el.id="m-"+id;
       el.className="msg "+(m.uid===uid?"me":"her");
+
+      /* LONG PRESS + RIGHT CLICK */
+      el.oncontextmenu = e => openMenu(e,id,m.uid===uid);
+      let pressTimer;
+      el.ontouchstart = e=>{
+        pressTimer=setTimeout(()=>openMenu(e,id,m.uid===uid),600);
+      };
+      el.ontouchend = ()=>clearTimeout(pressTimer);
+
       messages.appendChild(el);
     }
 
-    el.innerHTML = buildHTML(id,m,uid);
+    el.innerHTML = m.deleted
+      ? `<div class="deleted">This message was deleted</div>`
+      : `
+        <div class="text">${m.text}</div>
+        <div class="time">
+          ${new Date(m.time).toLocaleTimeString([],{
+            hour:'2-digit',minute:'2-digit'
+          })}
+          ${m.edited?`<span class="edited">(edited)</span>`:""}
+          ${m.uid===uid?(m.seen?" ✓✓":" ✓"):""}
+        </div>`;
+
     messages.scrollTop=messages.scrollHeight;
 
     if(m.uid!==uid && !m.seen){
@@ -190,62 +227,51 @@ window.send=()=>{
   msg.value="";
 };
 
-/* EDIT */
-window.editMsg=(id)=>{
-  const el=document.querySelector("#m-"+id+" .text");
+/* MENU LOGIC */
+function openMenu(e,id,isMine){
+  e.preventDefault();
+  selectedMsgId=id;
+  menu.style.display="block";
+  menu.style.top=e.clientY+"px";
+  menu.style.left=e.clientX+"px";
+}
+
+/* MENU ACTIONS */
+window.editSelected=()=>{
+  const el=document.querySelector("#m-"+selectedMsgId+" .text");
+  if(!el) return;
   const t=prompt("Edit message",el.innerText);
   if(t!==null){
-    update(ref(db,"messages/"+id),{
+    update(ref(db,"messages/"+selectedMsgId),{
       text:t,
       edited:true
     });
   }
+  closeMenu();
 };
 
-/* ✅ DELETE FOR ME (100% FIXED) */
-window.delForMe=(id)=>{
-  hiddenForMe.add(id);        // local hard block
-  const el=document.getElementById("m-"+id);
+window.deleteForMe=()=>{
+  const el=document.getElementById("m-"+selectedMsgId);
   if(el) el.remove();
+  closeMenu();
 };
 
-/* DELETE FOR EVERYONE */
-window.delForAll=(id)=>{
+window.deleteForAll=()=>{
   if(confirm("Delete for everyone?")){
-    update(ref(db,"messages/"+id),{
+    update(ref(db,"messages/"+selectedMsgId),{
       text:"",
       deleted:true
     });
   }
+  closeMenu();
 };
 
-/* TEMPLATE */
-function buildHTML(id,m,uid){
-  if(m.deleted){
-    return `
-      <div class="deleted">This message was deleted</div>
-      <div class="actions">
-        <span onclick="delForMe('${id}')">delete for me</span>
-      </div>`;
-  }
-
-  return `
-    <div class="text">${m.text}</div>
-    <div class="time">
-      ${new Date(m.time).toLocaleTimeString([],{
-        hour:'2-digit',minute:'2-digit'
-      })}
-      ${m.edited?`<span class="edited">(edited)</span>`:""}
-      ${m.uid===uid?(m.seen?" ✓✓":" ✓"):""}
-    </div>
-    ${m.uid===uid?`
-      <div class="actions">
-        <span onclick="editMsg('${id}')">edit</span>
-        <span onclick="delForMe('${id}')">delete for me</span>
-        <span onclick="delForAll('${id}')">delete for everyone</span>
-      </div>`:""}
-  `;
+function closeMenu(){
+  menu.style.display="none";
+  selectedMsgId=null;
 }
+
+document.body.onclick = ()=>closeMenu();
 
 /* DARK MODE */
 window.toggleDark=()=>{

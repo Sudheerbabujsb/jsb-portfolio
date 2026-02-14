@@ -5,6 +5,9 @@
 <title>Sudheer ❤️ Shyni</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
+<!-- 🌸 Stylish Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@500;600&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
 <style>
 *{box-sizing:border-box}
 
@@ -19,49 +22,59 @@ body{
     overflow:hidden;
 }
 
+/* Glass Card */
 .card{
     width:100%;
     max-width:380px;
-    padding:24px 20px;
+    padding:26px 22px;
     text-align:center;
     color:#fff;
-    background:rgba(255,255,255,0.12);
-    backdrop-filter: blur(12px);
-    border-radius:28px;
-    box-shadow:0 30px 80px rgba(0,0,0,0.45);
+    background:rgba(255,255,255,0.14);
+    backdrop-filter: blur(14px);
+    border-radius:30px;
+    box-shadow:0 30px 90px rgba(0,0,0,0.45);
     z-index:5;
 }
 
+/* Names – Elegant Script */
 #typing{
-    font-size:30px;
-    font-weight:700;
-    min-height:42px;
-    text-shadow:0 0 25px rgba(255,255,255,0.95);
+    font-family:'Great Vibes', cursive;
+    font-size:36px;
+    min-height:48px;
+    letter-spacing:1px;
+    text-shadow:0 0 30px rgba(255,255,255,1);
 }
 
+/* Heart Divider */
 .heart-line{
     font-size:20px;
-    margin:6px 0 12px;
+    margin:4px 0 10px;
     animation:pulse 1.8s infinite;
 }
 
+/* Subtitle */
 .subtitle{
-    font-size:15px;
+    font-family:'Playfair Display', serif;
+    font-size:16px;
+    letter-spacing:.5px;
     opacity:.95;
 }
 
+/* Button */
 button{
-    margin-top:18px;
-    padding:14px 32px;
-    font-size:17px;
+    margin-top:20px;
+    padding:14px 34px;
+    font-size:16px;
     border-radius:50px;
     border:none;
     background:#fff;
     color:#ff2f6d;
-    font-weight:700;
+    font-weight:600;
+    letter-spacing:.5px;
     box-shadow:0 15px 30px rgba(0,0,0,0.4);
 }
 
+/* Photo Section */
 .photo{
     display:none;
     margin-top:18px;
@@ -71,19 +84,31 @@ button{
 .photo img{
     width:100%;
     max-width:250px;
-    border-radius:24px;
+    border-radius:26px;
     box-shadow:0 25px 60px rgba(0,0,0,0.6);
     animation:heartbeat 1.6s infinite;
 }
 
+/* Love Text */
 .love{
-    margin-top:14px;
-    font-size:17px;
-    line-height:1.5;
+    margin-top:16px;
+    font-family:'Playfair Display', serif;
+    font-size:18px;
+    line-height:1.6;
+    letter-spacing:.4px;
     animation:glow 2s infinite alternate;
 }
 
-/* floating hearts */
+/* Valentine Wish – Signature Style */
+.valentine-wish{
+    margin-top:16px;
+    font-family:'Great Vibes', cursive;
+    font-size:26px;
+    min-height:32px;
+    text-shadow:0 0 25px rgba(255,255,255,0.95);
+}
+
+/* Floating Hearts */
 .heart{
     position:absolute;
     bottom:-10vh;
@@ -92,7 +117,7 @@ button{
     pointer-events:none;
 }
 
-/* sparkles */
+/* Sparkles & Kisses */
 .spark{
     position:absolute;
     font-size:18px;
@@ -100,7 +125,7 @@ button{
     pointer-events:none;
 }
 
-/* animations */
+/* Animations */
 @keyframes float{
     0%{transform:translateY(0) scale(.5);opacity:0}
     20%{opacity:1}
@@ -115,8 +140,8 @@ button{
     to{opacity:1;transform:scale(1)}
 }
 @keyframes glow{
-    from{text-shadow:0 0 10px #fff}
-    to{text-shadow:0 0 30px #ffd1dc}
+    from{text-shadow:0 0 12px #fff}
+    to{text-shadow:0 0 35px #ffd1dc}
 }
 @keyframes pulse{
     0%,100%{transform:scale(1)}
@@ -131,8 +156,9 @@ button{
 
 <body>
 
+<!-- 🎵 Romantic Music -->
 <audio id="music" loop>
-    <source src="Nenu Nuvvantu Song BGM _ Orange movie bgm.mp3">
+    <source src="Nenu Nuvvantu Song BGM _ Orange movie bgm.mp3" type="audio/mpeg">
 </audio>
 
 <div class="card">
@@ -143,56 +169,76 @@ button{
     <button onclick="reveal()">Touch With Love 💘</button>
 
     <div class="photo" id="photo">
-        <img src="our-photo.jpeg">
+        <img src="our-photo.jpeg" alt="Sudheer & Shyni">
+
         <div class="love">
-            I didn’t fall in love…<br>
-            I **walked into forever** with you 💞
+            <br>I didn’t fall in love…<br>
+            I <b>walked into forever</b> with you 💞
         </div>
+
+        <div class="valentine-wish" id="wish"></div>
     </div>
 </div>
 
 <script>
-/* typing */
-const text="Sudheer ❤️ Shyni";
-let i=0;
-const t=document.getElementById("typing");
-(function type(){
- if(i<text.length){t.innerHTML+=text.charAt(i++);setTimeout(type,130)}
+/* Typing Names */
+const nameText = "Sudheer ❤️ Shyni";
+let i = 0;
+const typing = document.getElementById("typing");
+
+(function typeName(){
+    if(i < nameText.length){
+        typing.innerHTML += nameText.charAt(i++);
+        setTimeout(typeName, 140);
+    }
 })();
 
-/* reveal */
+/* Reveal */
 function reveal(){
- document.querySelector("button").style.display="none";
- document.getElementById("photo").style.display="block";
- document.getElementById("music").play();
- burst();
+    document.querySelector("button").style.display = "none";
+    document.getElementById("photo").style.display = "block";
+    document.getElementById("music").play();
+    sparkleBurst();
+    setTimeout(typeWish, 1300);
 }
 
-/* hearts rain */
+/* Floating Hearts */
 setInterval(()=>{
- let h=document.createElement("div");
- h.className="heart";
- h.innerHTML=Math.random()>0.5?"❤️":"💖";
- h.style.left=Math.random()*100+"vw";
- h.style.fontSize=(Math.random()*16+14)+"px";
- h.style.animationDuration=(Math.random()*4+6)+"s";
- document.body.appendChild(h);
- setTimeout(()=>h.remove(),10000);
-},260);
+    let h = document.createElement("div");
+    h.className = "heart";
+    h.innerHTML = Math.random() > 0.5 ? "❤️" : "💖";
+    h.style.left = Math.random() * 100 + "vw";
+    h.style.fontSize = (Math.random() * 16 + 14) + "px";
+    h.style.animationDuration = (Math.random() * 4 + 6) + "s";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(), 10000);
+}, 260);
 
-/* sparkles + kisses */
-function burst(){
- for(let i=0;i<26;i++){
-  let s=document.createElement("div");
-  s.className="spark";
-  s.innerHTML=Math.random()>0.5?"✨":"💋";
-  s.style.left=(50+Math.random()*30-15)+"vw";
-  s.style.top=(50+Math.random()*30-15)+"vh";
-  document.body.appendChild(s);
-  setTimeout(()=>s.remove(),1100);
- }
+/* Sparkles + Kisses */
+function sparkleBurst(){
+    for(let i=0;i<26;i++){
+        let s = document.createElement("div");
+        s.className = "spark";
+        s.innerHTML = Math.random() > 0.5 ? "✨" : "💋";
+        s.style.left = (50 + Math.random()*30 - 15) + "vw";
+        s.style.top = (50 + Math.random()*30 - 15) + "vh";
+        document.body.appendChild(s);
+        setTimeout(()=>s.remove(), 1100);
+    }
 }
-document.body.addEventListener("touchstart",burst);
+document.body.addEventListener("touchstart", sparkleBurst);
+
+/* Valentine Wish Typing */
+const wishText = "Happy Valentine’s Day Shyni 💖 — Yours Forever, Sudheer";
+let w = 0;
+const wishDiv = document.getElementById("wish");
+
+function typeWish(){
+    if(w < wishText.length){
+        wishDiv.innerHTML += wishText.charAt(w++);
+        setTimeout(typeWish, 120);
+    }
+}
 </script>
 
 </body>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sudheer 💔 Shyni</title>
+<title>Goodbye</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <!-- 🌸 Stylish Google Fonts -->
@@ -363,6 +363,40 @@ p:nth-child(4) { animation-delay: 4s; }
   animation-play-state: running !important;
 }
 
+.rain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5; /* ABOVE background, BELOW text */
+}
+
+.drop {
+  position: absolute;
+  top: -100px;
+  width: 2px;
+  height: 90px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.7),
+    rgba(255,255,255,0)
+  );
+  animation: rainFall linear infinite;
+}
+
+@keyframes rainFall {
+  to {
+    transform: translateY(120vh);
+  }
+}
+.rain, .rain * {
+  animation-play-state: running !important;
+}
+
+
+
 </style>
 </head>
 
@@ -391,6 +425,8 @@ p:nth-child(4) { animation-delay: 4s; }
     — Still wishing you well
   </div>
 </div>
+
+<div id="rain"></div>
 
 <!-- Floating hearts -->
 <script>
@@ -422,6 +458,33 @@ function startExperience() {
   // Remove start screen
   document.getElementById("startScreen").style.display = "none";
 }
+setTimeout(() => {
+  content.classList.add("active");
+  content.classList.remove("paused");
+}, 1000);
+
+setTimeout(startRain, 4000);
+
+
+let rainStarted = false;
+
+function startRain() {
+  if (rainStarted) return;
+  rainStarted = true;
+
+  const rain = document.getElementById("rain");
+
+  for (let i = 0; i < 150; i++) {
+    const drop = document.createElement("div");
+    drop.className = "drop";
+    drop.style.left = Math.random() * 100 + "vw";
+    drop.style.animationDuration = (0.7 + Math.random() * 0.8) + "s";
+    drop.style.animationDelay = Math.random() * 2 + "s";
+    rain.appendChild(drop);
+  }
+
+  console.log("🌧️ Rain started");
+}
 
 </script>
 
@@ -430,7 +493,7 @@ function startExperience() {
 <div id="startScreen">
   <div class="startContent">
     <h2>Tap to continue</h2>
-    <p>This hurts… but you should hear it.</p>
+
     <button onclick="startExperience()">Begin 💔</button>
   </div>
 </div>

@@ -1,14 +1,14 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sudheer ❤️ Shyni</title>
+<title>Sudheer 💔 Shyni</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<!- 🌸 Stylish Google Fonts --
+<!-- 🌸 Stylish Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@500;600&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-<style>
+<!-- <style>
 *{box-sizing:border-box}
 
 body{
@@ -156,7 +156,7 @@ button{
 
 <body>
 
-<!- 🎵 Romantic Music --
+<!🎵 Romantic Music --
 <audio id="music" loop>
     <source src="Nenu Nuvvantu Song BGM _ Orange movie bgm.mp3" type="audio/mpeg">
 </audio>
@@ -239,51 +239,205 @@ function typeWish(){
         setTimeout(typeWish, 120);
     }
 }
+</script> -->
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Georgia', serif;
+}
+
+body {
+  height: 100vh;
+  background: linear-gradient(180deg, #0f0f0f, #1c1c1c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #eee;
+  overflow: hidden;
+}
+
+.container {
+  text-align: center;
+  padding: 20px;
+  max-width: 420px;
+  animation: fadeIn 2.5s ease forwards;
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+  color: #ff6b6b;
+}
+
+p {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  opacity: 0;
+  animation: textFade 1.5s ease forwards;
+}
+
+p:nth-child(2) { animation-delay: 1s; }
+p:nth-child(3) { animation-delay: 2.5s; }
+p:nth-child(4) { animation-delay: 4s; }
+
+.signature {
+  margin-top: 30px;
+  font-style: italic;
+  opacity: 0;
+  animation: textFade 1.5s ease forwards;
+  animation-delay: 5.5s;
+}
+
+.heart {
+  position: absolute;
+  font-size: 18px;
+  color: rgba(255, 100, 100, 0.6);
+  animation: float 6s linear infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes textFade {
+  to { opacity: 1; }
+}
+
+@keyframes float {
+  from { transform: translateY(100vh); opacity: 1; }
+  to { transform: translateY(-10vh); opacity: 0; }
+}
+
+#startScreen {
+  position: fixed;
+  inset: 0;
+  background: #0f0f0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.startContent {
+  text-align: center;
+  color: #eee;
+}
+
+.startContent h2 {
+  margin-bottom: 10px;
+}
+
+.startContent button {
+  margin-top: 15px;
+  padding: 12px 26px;
+  background: #ff6b6b;
+  border: none;
+  border-radius: 25px;
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Pause all animations initially */
+.paused * {
+  animation-play-state: paused !important;
+}
+
+/* Hide main content until start */
+#mainContent {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* When active */
+#mainContent.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#mainContent.active * {
+  animation-play-state: running !important;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container paused" id="mainContent">
+
+  <h1>Goodbye.</h1>
+
+  <p>
+    I didn’t plan for this ending,<br>
+    but some stories don’t finish the way we imagine.
+  </p>
+
+  <p>
+    What we had was real.<br>
+    What we lost… hurts even more.
+  </p>
+
+  <p>
+    I hope someday you remember me<br>
+    without pain — only warmth.
+  </p>
+
+  <div class="signature">
+    — Still wishing you well
+  </div>
+</div>
+
+<!-- Floating hearts -->
+<script>
+function createHeart() {
+  const heart = document.createElement('div');
+  heart.className = 'heart';
+  heart.innerHTML = '💔';
+  heart.style.left = Math.random() * 100 + 'vw';
+  heart.style.animationDuration = (4 + Math.random() * 4) + 's';
+  document.body.appendChild(heart);
+
+  setTimeout(() => heart.remove(), 6000);
+}
+
+setInterval(createHeart, 700);
+
+function startExperience() {
+  const music = document.getElementById("bgMusic");
+  const content = document.getElementById("mainContent");
+
+  // Play music
+  music.volume = 0.5;
+  music.play();
+
+  // Activate content + animations
+  content.classList.add("active");
+  content.classList.remove("paused");
+
+  // Remove start screen
+  document.getElementById("startScreen").style.display = "none";
+}
+
 </script>
 
 </body>
-</html> -->
 
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Died</title>
-<style>
-    body {
-        margin: 0;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #000;
-    }
-
-    .heart {
-        font-size: 15rem; /* BIG size */
-        animation: beat 1s infinite;
-    }
-
-    @keyframes beat {
-        0% { transform: scale(1); }
-        25% { transform: scale(1.1); }
-        50% { transform: scale(1); }
-        75% { transform: scale(1.1); }
-        100% { transform: scale(1); }
-    }
-</style>
-</head>
-<body>
-
-<div style="display:flex;justify-content:center;align-items:center;height:100vh;
-                background:black;color:white;font-size:25px;text-align:center">
-      I'm Died.<br><br>
-      Please remove Me from your Heart
+<div id="startScreen">
+  <div class="startContent">
+    <h2>Tap to continue</h2>
+    <p>This hurts… but you should hear it.</p>
+    <button onclick="startExperience()">Begin 💔</button>
+  </div>
 </div>
 
-<div class="heart">💔</div>
+<audio id="bgMusic" loop>
+  <source src="orange movie whatsapp status_orange movie love whatsapp status.mp3" type="audio/mpeg">
+</audio>
 
-</body>
 
-</html>
+</html> 

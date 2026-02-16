@@ -32,5 +32,16 @@
 <div class="heart">❤️</div>
 
 </body>
+<script>
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  document.body.innerHTML = `
+    <div style="display:flex;justify-content:center;align-items:center;height:100vh;
+                background:black;color:white;font-size:20px;text-align:center">
+      This app has been updated.<br><br>
+      Please remove the old app and reopen from browser ❤️
+    </div>
+  `;
+}
+</script>
 
 </html>

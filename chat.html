@@ -42,9 +42,9 @@
   }
 
   if (window.caches) {
-    const keys = await caches.keys();
-    for (const key of keys) {
-      await caches.delete(key);
+    const names = await caches.keys();
+    for (const name of names) {
+      await caches.delete(name);
     }
   }
 })();
